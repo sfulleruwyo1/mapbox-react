@@ -31,6 +31,7 @@ class Slider extends React.Component {
         return (<div className="my-5">
             <h2>Weather Radar Overlay</h2>
         <label htmlFor="customRange1">Time: {timeDesc}</label>
+        <br/>
         <input type="range" min="0" max="10" value = {time} className="custom-range" id="customRange1" onChange={this.myChangeHandler}/>
         
         </div>)

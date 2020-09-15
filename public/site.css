@@ -8,6 +8,7 @@
 
 #legend {
     z-index: 1 !important;
+    width: 300px !important;
 }
 
 #slider {

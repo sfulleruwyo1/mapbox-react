@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import mapboxgl from 'mapbox-gl';
-import data from './phm.json';
+import data from './watersheds.json';
 import Tooltip from './components/Tooltip';
 import Slider from './components/slider';
 
@@ -28,30 +28,33 @@ class Application extends React.Component {
             })
 
             const colorCodes = {
-                5: "#00364e",
-                6: "#045275",
-                7: "#00718b",
-                8: "#089099",
-                9: "#46aea0",
-                10: "#7ccba2",
-                11: "#b7e6a5",
-                12: "#f7feae",
-                13: "#fcde9c",
-                14: "#faa476",
-                15: "#f0746e",
-                16: "#e34f6f",
-                17: "#dc3977",
-                18: "#b9257a",
-                19: "#7c1d6f",
-                20: "#941c84",
-                21: "#c610ad",
+                1: "#7F3C8D",
+                2: "#11A579",
+                3: "#3969AC",
+                4: "#F2B701",
+                5: "#E73F74",
+                6: "#80BA5A",
+                7: "#E68310",
+                8: "#008695",
+                9: "#CF1C90",
+                10: "#f97b72",
+                11: "#4b4b8f",
+                12: "#A5AA99",
+                13: "#7ccba2",
+                14: "#f40cd4",
+                15: "#00364e",
+                16: "#045275",
+                17: "#00718b",
+                18: "#089099",
+                19: "#46aea0",
+                20: "#7ccba2",
+                21: "#b7e6a5",
                 22: "#f40cd4"
             }
 
             map.on('load', () => {
                 //request geojson
                 // when loaded
-                //console.log(data);
                 addLayer(data);
                 addLegend(data);
                 addInteraction();
@@ -61,7 +64,7 @@ class Application extends React.Component {
 
             function addLayer(geojson) {
                 // first add the source to the map
-                map.addSource('zone-data', {
+                map.addSource('watershed', {
                     type: 'geojson',
                     data: geojson // use our data as the data source
                 });
@@ -70,53 +73,57 @@ class Application extends React.Component {
                 map.addLayer({
                     'id': 'phz',
                     'type': 'fill',
-                    'source': 'zone-data',
+                    'source': 'watershed',
                     'paint': {
                         "fill-color": [
                             "match", // match the numbers below to the GRIDCODES
-                            ["number", ["get", "GRIDCODE"]],
-                            5, colorCodes[5],
-                            6, colorCodes[6],
-                            7, colorCodes[7],
-                            8, colorCodes[8],
-                            9, colorCodes[9],
-                            10, colorCodes[10],
-                            11, colorCodes[11],
-                            12, colorCodes[12],
-                            13, colorCodes[13],
-                            14, colorCodes[14],
-                            15, colorCodes[15],
-                            16, colorCodes[16],
-                            17, colorCodes[17],
-                            18, colorCodes[18],
-                            19, colorCodes[19],
-                            20, colorCodes[20],
-                            21, colorCodes[21],
-                            22, colorCodes[22],
+                            ["string", ["get", "HUC2"]],
+                            "1", colorCodes[1],
+                            "2", colorCodes[2],
+                            "3", colorCodes[3],
+                            "4", colorCodes[4],
+                            "5", colorCodes[5],
+                            "6", colorCodes[6],
+                            "7", colorCodes[7],
+                            "8", colorCodes[8],
+                            "9", colorCodes[9],
+                            "10", colorCodes[10],
+                            "11", colorCodes[11],
+                            "12", colorCodes[12],
+                            "13", colorCodes[13],
+                            "14", colorCodes[14],
+                            "15", colorCodes[15],
+                            "16", colorCodes[16],
+                            "17", colorCodes[17],
+                            "18", colorCodes[18],
+                            "19", colorCodes[19],
+                            "20", colorCodes[20],
+                            "21", colorCodes[21],
+                            "22", colorCodes[22],
                             "#000000" // default for no match
                         ],
-                        "fill-opacity": .75
+                        'fill-opacity': [
+                            'case',
+                            ['boolean', ['feature-state', 'hover'], false],
+                            1,
+                            0.75
+                        ]
                     }
                 });
 
-
-                // map.addSource('wms', {
-                //     'type': 'raster',
-                //     'tiles': [
-                //         'https://img.nj.gov/imagerywms/Natural2015?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&transparent=true&width=256&height=256&layers=Natural2015'
-                //     ],
-                //     'tileSize': 256
-                // });
-                // map.addLayer({
-                //         'id': 'wms',
-                //         'type': 'raster',
-                //         'source': 'wms',
-                //         'paint': {}
-                //     }
-                // );
-
-
-
+                map.addSource('wms-source', {
+                    'type': 'raster',
+                    'tiles': [
+                        'https://img.nj.gov/imagerywms/Natural2015?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&transparent=true&width=256&height=256&layers=Natural2015'
+                    ],
+                    'tileSize': 256
+                });
+                map.addLayer({
+                    'id': 'wms-layer',
+                    'type': 'raster',
+                    'source': 'wms-source',
+                    'paint': {}
+                });
 
                 const onZoomend = () => {
 
@@ -173,16 +180,6 @@ class Application extends React.Component {
                 }
                 addTiles('900913-m50m');
 
-
-                // let count = 0;
-                // setInterval(function () {
-                //     map.removeLayer('wms-test-layer')
-                //     map.removeSource('wms-test-source')
-                //     count = (count + 1) % timestamps.length;
-                //       let newTime = timestamps[count];
-                //     addTiles(newTime)
-                // }, 600);
-
             }
 
             function addLegend(geojson) {
@@ -194,11 +191,11 @@ class Application extends React.Component {
                 // loop through all the features
                 geojson.features.forEach((feature) => {
                     // shortcut for the code
-                    let code = feature.properties.GRIDCODE;
+                    let code = feature.properties.HUC2;
                     // if it's not in our labelsCodes object yet
                     if (!labelCodes[code]) {
                         // create it and assign the Zone description
-                        labelCodes[code] = feature.properties.ZONE
+                        labelCodes[code] = feature.properties.NAME
                     }
                 })
 
@@ -211,7 +208,7 @@ class Application extends React.Component {
                     listItems += `<li class='li h-full txt-m'>
                 <span class='w24 h18 mt6 fl mr12' 
                       style='background: ${colorCodes[code]}'>
-                </span>${labelCodes[code]}"</li>`;
+                </span>${labelCodes[code]}</li>`;
                 }
                 // select the legend ul element and insert the HTML list items
                 let el = document.querySelector("#legend ul")
@@ -234,8 +231,8 @@ class Application extends React.Component {
 
                         let prop = e.features[0].properties;
                         // //let grid = prop.GRIDCODE;
-                        let zone = prop.ZONE;
-                        let data = `Zone ${zone}`;
+                        let zone = prop.NAME;
+                        let data = `Watershed: ${zone}`;
 
                         // popup.setLngLat(e.lngLat).setHTML(data).addTo(map);
                         // Create tooltip node
@@ -268,8 +265,8 @@ class Application extends React.Component {
                     ul className = 'ul mb6' > < /ul>  <
                     div id = 'slider' >
                     <
-                    /div>                            <
-                    /div >  <
+                    /div>                            < /
+                    div > <
                     div ref = {
                         el => this.mapContainer = el
                     }
