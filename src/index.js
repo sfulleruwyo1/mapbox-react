@@ -100,6 +100,23 @@ class Application extends React.Component {
                 });
 
 
+                // map.addSource('wms', {
+                //     'type': 'raster',
+                //     'tiles': [
+                //         'https://img.nj.gov/imagerywms/Natural2015?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&transparent=true&width=256&height=256&layers=Natural2015'
+                //     ],
+                //     'tileSize': 256
+                // });
+                // map.addLayer({
+                //         'id': 'wms',
+                //         'type': 'raster',
+                //         'source': 'wms',
+                //         'paint': {}
+                //     }
+                // );
+
+
+
 
                 const onZoomend = () => {
 
@@ -128,7 +145,7 @@ class Application extends React.Component {
                 });
 
                 let element = document.getElementById('customRange1');
-                element.addEventListener('change',function(){
+                element.addEventListener('change', function () {
                     let newTime = timestamps[element.value];
                     map.removeLayer('wms-test-layer')
                     map.removeSource('wms-test-source')
@@ -223,7 +240,10 @@ class Application extends React.Component {
                         // popup.setLngLat(e.lngLat).setHTML(data).addTo(map);
                         // Create tooltip node
                         const tooltipNode = document.createElement('div');
-                        ReactDOM.render(<Tooltip feature = {data}/>, tooltipNode);
+                        ReactDOM.render( < Tooltip feature = {
+                                data
+                            }
+                            />, tooltipNode);
                             // Set tooltip on map
                             tooltipRef.setLngLat(e.lngLat).setDOMContent(tooltipNode).addTo(map);
 
@@ -235,22 +255,30 @@ class Application extends React.Component {
                     });
 
                 }
-                ReactDOM.render(<Slider/>, document.getElementById('slider'));
+                ReactDOM.render( < Slider / > , document.getElementById('slider'));
 
             }
             render() {
-                return ( <div>
-                        <div id = 'legend' className = 'w180 bg-white absolute top right mt18 mr18 round shadow-darken10 px12 py12 txt-s none'>
-                            <strong className = 'block mb6 txt-l'> Zones </strong> 
-                            <ul className = 'ul mb6'> </ul> 
-                            <div id = 'slider'>
-                            </div>                           
-                        </div > 
-                        <div ref = {el => this.mapContainer = el} className = 'mapContainer'/>
-                        
-                        </div>
-                        
-                        
+                return ( < div >
+                    <
+                    div id = 'legend'
+                    className = 'w180 bg-white absolute top right mt18 mr18 round shadow-darken10 px12 py12 txt-s none' >
+                    <
+                    strong className = 'block mb6 txt-l' > Zones < /strong>  <
+                    ul className = 'ul mb6' > < /ul>  <
+                    div id = 'slider' >
+                    <
+                    /div>                            <
+                    /div >  <
+                    div ref = {
+                        el => this.mapContainer = el
+                    }
+                    className = 'mapContainer' / >
+
+                    <
+                    /div>
+
+
                 )
             }
         }
