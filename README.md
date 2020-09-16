@@ -4,6 +4,10 @@ Trying out mapbox react
 ## Data Source
 ### Watershed Boundary
 [USDA Data Gateway](https://datagateway.nrcs.usda.gov/GDGHome_DirectDownLoad.aspx)
+### Hydro Power Plants
+[Hydro Plants](https://hydrosource.ornl.gov/)
+### Iowa State Weather WMS 
+[Nexrad Radar](https://mesonet.agron.iastate.edu)
 
 ## Data Processing
 Simplify boundaries and convert to geojson
