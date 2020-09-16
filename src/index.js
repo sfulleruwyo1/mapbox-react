@@ -2,8 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import mapboxgl from 'mapbox-gl';
 import data from './watersheds.json';
+import data2 from './powerplants.json';
 import Tooltip from './components/Tooltip';
 import Slider from './components/slider';
+import {within} from '@turf/turf';
 
 
 
@@ -26,6 +28,8 @@ class Application extends React.Component {
                 center: [this.state.lng, this.state.lat],
                 zoom: this.state.zoom
             })
+
+            let hoveredStateId = null;
 
             const colorCodes = {
                 1: "#7F3C8D",
@@ -55,18 +59,29 @@ class Application extends React.Component {
             map.on('load', () => {
                 //request geojson
                 // when loaded
-                addLayer(data);
+                countPoints(data, data2);
+                addLayer(data, data2);
                 addLegend(data);
                 addInteraction();
 
 
             })
 
-            function addLayer(geojson) {
+            function countPoints(data, data2){
+                data.features.forEach(function(feature){
+                    let ptsWithin = within(data2, feature);
+                    feature.properties.PLANTS = ptsWithin.features.length;
+                })
+                
+
+            }
+
+            function addLayer(geojson, geojson2) {
                 // first add the source to the map
                 map.addSource('watershed', {
                     type: 'geojson',
-                    data: geojson // use our data as the data source
+                    data: geojson, // use our data as the data source
+                    'generateId': true
                 });
 
                 // add the GeoJSON data as a mapbox gl layer
@@ -106,15 +121,35 @@ class Application extends React.Component {
                             'case',
                             ['boolean', ['feature-state', 'hover'], false],
                             1,
-                            0.75
+                            0.5
                         ]
+
+                    }
+                });
+
+                map.addSource('power', {
+                    type: 'geojson',
+                    data: geojson2, // use our data as the data source
+                    'generateId': true
+                });
+
+                map.addLayer({
+                    'id': 'pws',
+                    'type': 'circle',
+                    'source': 'power',
+                    'paint': {
+                        'circle-radius': 3.5,
+                        'circle-color': '#223b53',
+                        'circle-stroke-color': 'yellow',
+                        'circle-stroke-width': 1,
+                        'circle-opacity': 0.5
                     }
                 });
 
                 map.addSource('wms-source', {
                     'type': 'raster',
                     'tiles': [
-                        'https://img.nj.gov/imagerywms/Natural2015?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&transparent=true&width=256&height=256&layers=Natural2015'
+                        'https://hydro.nationalmap.gov/arcgis/rest/services/nhd/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=EPSG%3A3857&layers=3&layerDefs=&size=256%2c256&imageSR=&format=png&transparent=true&dpi=&time=&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&f=image'
                     ],
                     'tileSize': 256
                 });
@@ -144,8 +179,8 @@ class Application extends React.Component {
                 // map will flyTo the bounds provided
                 map.fitBounds([-129.07, 23.02, -65.74, 50.53], {
                     padding: {
-                        top: 12,
-                        bottom: 18,
+                        top: 20,
+                        bottom: 10,
                         left: 12,
                         right: 220
                     }
@@ -230,25 +265,51 @@ class Application extends React.Component {
                         map.getCanvas().style.cursor = 'pointer';
 
                         let prop = e.features[0].properties;
-                        // //let grid = prop.GRIDCODE;
                         let zone = prop.NAME;
-                        let data = `Watershed: ${zone}`;
+                        let plants = prop.PLANTS;
+                        let data = `Watershed: ${zone} Hydro Plants: ${plants}`;
 
                         // popup.setLngLat(e.lngLat).setHTML(data).addTo(map);
                         // Create tooltip node
                         const tooltipNode = document.createElement('div');
-                        ReactDOM.render( < Tooltip feature = {
-                                data
-                            }
-                            />, tooltipNode);
+                        ReactDOM.render(<Tooltip feature = {data}/>, tooltipNode);
                             // Set tooltip on map
                             tooltipRef.setLngLat(e.lngLat).setDOMContent(tooltipNode).addTo(map);
+
+                            //Hover effect
+                            if (e.features.length > 0) {
+                                if (hoveredStateId) {
+                                    map.setFeatureState({
+                                        source: 'watershed',
+                                        id: hoveredStateId
+                                    }, {
+                                        hover: false
+                                    });
+                                }
+                                hoveredStateId = e.features[0].id;
+                                map.setFeatureState({
+                                    source: 'watershed',
+                                    id: hoveredStateId
+                                }, {
+                                    hover: true
+                                });
+                            }
 
                         });
 
                     map.on('mouseleave', 'phz', function () {
                         map.getCanvas().style.cursor = '';
                         tooltipRef.remove();
+
+                        if (hoveredStateId) {
+                            map.setFeatureState({
+                                source: 'watershed',
+                                id: hoveredStateId
+                            }, {
+                                hover: false
+                            });
+                        }
+                        hoveredStateId = null;
                     });
 
                 }
@@ -256,24 +317,21 @@ class Application extends React.Component {
 
             }
             render() {
-                return ( < div >
-                    <
-                    div id = 'legend'
-                    className = 'w180 bg-white absolute top right mt18 mr18 round shadow-darken10 px12 py12 txt-s none' >
-                    <
-                    strong className = 'block mb6 txt-l' > Zones < /strong>  <
-                    ul className = 'ul mb6' > < /ul>  <
-                    div id = 'slider' >
-                    <
-                    /div>                            < /
-                    div > <
-                    div ref = {
-                        el => this.mapContainer = el
-                    }
-                    className = 'mapContainer' / >
-
-                    <
-                    /div>
+                return ( <div>
+                    <div id = 'legend' className = 'w180 bg-white absolute top right mt18 mr18 round shadow-darken10 px12 py12 txt-s none' >
+                        <strong className = 'block mb6 txt-l'>Watershed Regions</strong>  
+                        <ul className = 'ul mb6'>
+                        </ul>
+                        <br/>
+                        <div>
+                        <span className="dot"></span><span className="font">Power Plants</span>
+                        </div>
+                        <br></br>  
+                        <div id = 'slider'>
+                        </div>
+                    </div> 
+                    <div ref = {el => this.mapContainer = el} className = 'mapContainer'/>
+                    </div>
 
 
                 )
